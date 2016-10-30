@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2012-2016 Adobe Systems Incorporated. All rights reserved.
+
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<html>
+
+<head>
+  <meta charset="utf-8"/>
+  <meta name="format-detection" content="telephone=no"/>
+  <meta name="msapplication-tap-highlight" content="no"/>
+  <meta name="viewport"
+  content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width"/>
+  <!-- This is a wide open CSP declaration. To lock this down for production, see below. -->
+  <meta http-equiv="Content-Security-Policy"
+  content="default-src * 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src *"/>
+  <!-- Good default declaration:
+  * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+  * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+  * Disables use of eval() and inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+  * Enable inline JS: add 'unsafe-inline' to default-src
+  * Enable eval(): add 'unsafe-eval' to default-src
+  * Create your own at http://cspisawesome.com
+-->
+<!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: 'unsafe-inline' https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; media-src *" /> -->
+
+<title>Where am I?</title>
+<link rel="stylesheet" type="text/css" href="css/jquery.mobile.flatui.css" />
+<script src="js/jquery.js"></script>
+<script src="js/jquery.mobile-1.4.0-rc.1.js"></script>
+<script type="text/javascript" src="http://apis.daum.net/maps/maps3.js?apikey=f97caf152c8191bf0c8183e1f40872cb"></script>
+
+</head>
+
+  <div data-role="page">
+
+    <div data-role="panel" id="panel" data-position="right" data-theme="a" data-display="push"></div>
+
+    <div data-role="header">
+      <a data-iconpos="notext" data-role="button" data-icon="home" title="Home">Home</a>
+      <h1>Where Am I</h1>
+      <a data-iconpos="notext" href="#panel" data-role="button" data-icon="flat-menu"></a>
+    </div>
+
+    <div data-role="content" role="main">
+      <div id="map" style="width:300px;height:300px;"></div>
+      <br>
+      <div>
+        <span>
+          lang: <input type="text" id="lang"><br>
+          long: <input type="text" id="long"><br>
+          name : <input type="text" id="name">
+        </span>
+      </div>
+      <div>
+        <button type="button" id="saveBtn">Save</button>
+      </div>
+
+      <ul data-role="listview" data-inset="true" class="ui-listview ui-listview-inset ui-corner-all ui-shadow" id="visited">
+        <li data-role="list-divider" data-theme="a" role="heading" class="ui-li ui-li-divider ui-bar-a ui-first-child">Visited</li>
+      </ul>
+
+    </div>
+  </div>
+
+  <div id="highlight"> </div>
+</body>
+
+<script type="text/javascript" src="cordova.js"></script>
+<script type="text/javascript" src="js/myapp.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.4.1/firebase.js"></script>
+<script type="text/javascript">
+  // Wait for device API libraries to load
+  console.log("starts");
+
+  document.addEventListener("deviceready", onDeviceReady, false);
+
+  // device APIs are available
+  //
+  function onDeviceReady() {
+    // Throw an error if no update is received every 30 seconds
+    console.log("onDeviceReady");
+
+    // Initialize Firebase
+    var config = {
+      apiKey: "AIzaSyBorOxOG-9_13Jw5PenDDtvKuEIaU3ZQ8E",
+      authDomain: "mobile-test-362f3.firebaseapp.com",
+      databaseURL: "https://mobile-test-362f3.firebaseio.com",
+      storageBucket: "mobile-test-362f3.appspot.com",
+      messagingSenderId: "483124867402"
+    };
+    firebase.initializeApp(config);
+    
+    watchID = navigator.geolocation.getCurrentPosition(onSuccess, onError, { timeout: 30000 });
+
+
+    window.myapp = new MyApp();
+
+  }
+
+   // onSuccess Geolocation
+  //
+  function onSuccess(position) {
+    console.log(position);
+
+    setMap(position.coords.latitude, position.coords.longitude);
+
+  }
+
+  function setMap(latitude, longitude) {
+    var container = document.getElementById('map');
+    var options = {
+      center: new daum.maps.LatLng(latitude, longitude),
+      level: 3
+    };
+
+    var map = new daum.maps.Map(container, options);
+
+    // 마커가 표시될 위치입니다
+    var markerPosition  = new daum.maps.LatLng(latitude, longitude);
+
+    document.getElementById("lang").value = latitude;
+    document.getElementById("long").value = longitude;
+
+    // 마커를 생성합니다
+    var marker = new daum.maps.Marker({
+      position: markerPosition
+    });
+
+    // 마커가 지도 위에 표시되도록 설정합니다
+    marker.setMap(map);
+  }
+
+  // onError Callback receives a PositionError object
+  //
+  function onError(error) {
+    alert('code: '    + error.code    + '\n' +
+    'message: ' + error.message + '\n');
+  }
+
+  $("#saveBtn").click(function() {
+
+    myapp.saveMessage($("#lang").val(), $("#long").val(), $("#name").val() );
+  });
+
+  </script>
+
+  </html>
