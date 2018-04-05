@@ -1,0 +1,355 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>우리 어디가?</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <script type="text/javascript" src="http://apis.daum.net/maps/maps3.js?apikey=4a803d6e58547d63a8a7fe62267e467c&libraries=services,clusterer,drawing"></script>
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+
+    <style>
+        h3 {display:inline;}
+        button {margin-left : 4px;}
+        .map {}
+        .map_wrap {}
+        .map_wrap, .map_wrap * {margin:0;padding:0;font-family:'Malgun Gothic',dotum,'돋움',sans-serif;font-size:12px;}
+        .map_wrap a, .map_wrap a:hover, .map_wrap a:active{color:#000;text-decoration: none;}
+        .map_wrap {position:relative;width:100%;height:200px;}
+        .menu_wrap {width:100%;margin:5px 0 5px 5px;padding:5px;overflow-y:auto;background:rgba(255, 255, 255, 0.7);z-index: 1;font-size:12px;border-radius: 10px;}
+        .bg_white {background:#fff;}
+        .category {font-size:20px;}
+        .menu_wrap hr {display: block; height: 1px;border: 0; border-top: 2px solid #5F5F5F;margin:3px 0;}
+        .menu_wrap .option{text-align: center;}
+        .menu_wrap .option p {margin:10px 0;}
+        .menu_wrap .option button {margin-left:5px;}
+        .placesList li {list-style: none;}
+        .placesList .item {position:relative;border-bottom:1px solid #888;cursor: pointer;min-height: 65px;}
+        .placesList .item span {display: block;margin-top:4px;}
+        .placesList .item h5, .placesList .item .info {}
+        .placesList .item .info{}
+        .placesList .info .gray {color:#8a8a8a;}
+        .placesList .info .jibun {padding-left:26px;background:url(http://t1.daumcdn.net/localimg/localimages/07/mapapidoc/places_jibun.png) no-repeat;}
+        .placesList .info .tel {color:#009900;}
+        .placesList .item .markerbg {float:left; width:36px; height:37px;margin:10px 0 0 10px;background:url(http://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_number_blue.png) no-repeat;}
+        .placesList .item .marker_1 {background-position: 0 -10px;}
+        .placesList .item .marker_2 {background-position: 0 -56px;}
+        .placesList .item .marker_3 {background-position: 0 -102px}
+        .placesList .item .marker_4 {background-position: 0 -148px;}
+        .placesList .item .marker_5 {background-position: 0 -194px;}
+        .placesList .item .marker_6 {background-position: 0 -240px;}
+        .placesList .item .marker_7 {background-position: 0 -286px;}
+        .placesList .item .marker_8 {background-position: 0 -332px;}
+        .placesList .item .marker_9 {background-position: 0 -378px;}
+        .placesList .item .marker_10 {background-position: 0 -423px;}
+        .placesList .item .marker_11 {background-position: 0 -470px;}
+        .placesList .item .marker_12 {background-position: 0 -516px;}
+        .placesList .item .marker_13 {background-position: 0 -562px;}
+        .placesList .item .marker_14 {background-position: 0 -608px;}
+        .placesList .item .marker_15 {background-position: 0 -654px;}
+        #pagination {margin:10px auto;text-align: center;}
+        #pagination a {display:inline-block;margin-right:10px;}
+        #pagination .on {font-weight: bold; cursor: default;color:#777;}
+    </style>
+
+    <script>
+      var firebaseApp = firebase.initializeApp({
+         apiKey: "AIzaSyCNFFa-0zQ8BBsTkNM4076wMlaaEfNiMEI",
+         authDomain: "mobiletest-b5fc1.firebaseapp.com",
+         databaseURL: "https://mobiletest-b5fc1.firebaseio.com",
+         storageBucket: "mobiletest-b5fc1.appspot.com",
+         messagingSenderId: "891861159351"
+      })
+   </script>
+</head>
+
+
+<body>
+
+<button onclick="dummy()">데이터 생성</button>
+
+<div id="map_list" class="map_wrap">
+</div>
+
+<div id="course_list">
+</div>
+
+
+<script src="js/dong.js"></script>
+<script src="js/linkedlist.js"></script>
+<script>
+    var search_list = new Array();
+    var Member = new Array();
+    Member['kim'] = {'x':37.54758642055094,'y':126.93676254306321, 'trans':1,'food':1,'drink':4,'ent':5,'famous':2,'people':5, 'trail':2,'att':2};
+    Member['lee'] = {'x':37.55893158288132,'y':126.92417881298496,'trans':3,'food':3,'drink':5,'ent':2,'famous':5,'people':1, 'trail':3,'att':0};
+    Member['park'] = {'x':37.55140318515989, 'y':126.97628014591928,'trans':5,'food':5,'drink':2,'ent':1,'famous':4,'people':3, 'trail':5,'att':4};
+    var course = new Array();
+    course['lunch'] = '초밥';
+    //course['brunch'] = '토스트';
+    course['dinner'] = '삼겹살';
+    //course['cafe'] = '스타벅스';
+    //course['drink'] = '맥주';
+
+    var calc_center = function(callback) {
+        var x_sum=0,y_sum=0,trans_sum=0,food_sum=0,drink_sum=0,ent_sum=0,famous_sum=0,people_sum=0,trail_sum=0,att_sum=0;
+        var x_mean=0,y_mean=0,trans_mean=0,food_mean=0,drink_mean=0,ent_mean=0,famous_mean=0,people_mean=0,trail_mean=0,att_mean = 0;
+        var len = 0;
+        for (var i in Member){
+            x_sum += Member[i].x;
+            y_sum += Member[i].y;
+            trans_sum += Member[i].trans;
+            food_sum += Member[i].food;
+            drink_sum += Member[i].drink;
+            ent_sum += Member[i].ent;
+            famous_sum += Member[i].famous;
+            people_sum += Member[i].people;
+            trail_sum += Member[i].trail;
+            att_sum += Member[i].att;
+            len += 1;
+        }
+        x_mean = x_sum / len;
+        y_mean = y_sum / len;
+        trans_mean = trans_sum / len;
+        food_mean = food_sum / len;
+        drink_mean = drink_sum / len;
+        ent_mean = ent_sum / len;
+        famous_mean = famous_sum / len;
+        people_mean = people_sum / len;
+        trail_mean = trail_sum / len;
+        att_mean = att_sum / len;
+        callback(x_mean,y_mean,trans_mean,food_mean,drink_mean,ent_mean,famous_mean,people_mean,trail_mean,att_mean);
+    };
+
+
+    calc_center(function(x_mean,y_mean,trans_mean,food_mean,drink_mean,ent_mean,famous_mean,people_mean,trail_mean,att_mean){
+        var score = new linkedList();
+        var dist=0,trans=0,food=0,drink=0,ent=0,famous=0,people=0,trail=0,att=0,tmp_score=0;
+        for (var i in dong) {
+            dist = Math.pow(x_mean - dong[i].x , 2) + Math.pow(y_mean - dong[i].y , 2);
+            trans = 1 * trans_mean * dong[i].trans;
+            food = 1 * food_mean * dong[i].food;
+            drink = 1 * drink_mean * dong[i].drink;
+            ent = 1 * ent_mean * dong[i].ent;
+            famous = 1 * famous_mean * dong[i].famous;
+            people = 1 * people_mean * dong[i].people;
+            trail = 1 * trail_mean * dong[i].trail;
+            att = 1 * att_mean * dong[i].att;
+            tmp_score = trans + food + drink + ent + famous + people + trail + att - 10000*dist;
+            if (score.isEmpty()) {
+                score.add(tmp_score,i,1);
+                continue;
+            }
+            else {
+                for (var j=1; j<=score.length; j++) {
+                    if (j==score.length){
+                        score.add(tmp_score,i,score.length);
+                        break;
+                    }
+                    if(tmp_score > score.peek(j-1)){
+                        score.add(tmp_score, i, j);
+                        break;
+                    }
+                }
+            }
+        }
+
+        var cnt = 0;
+        for(var c in course){
+            var key_word = course[c];
+            var category = c;
+
+            var menu_wrap_div = document.createElement('div');
+            menu_wrap_div.id = "menu_wrap_"+category;
+            var menu_inner_div = document.createElement('ul');
+            menu_inner_div.id = "placesList_"+category;
+            menu_wrap_div.appendChild(menu_inner_div);
+            document.getElementById('course_list').appendChild(menu_wrap_div);
+/*
+            var map_wrap_div = document.createElement('div');
+            map_wrap_div.id = "map_wrap_"+category;
+            var map_div = document.createElement('div');
+            map_div.id = "map_"+category;
+            map_div.style = "width:100%;height:100%;position:relative;overflow:hidden;";
+            map_wrap_div.appendChild(map_div);
+            document.getElementById('map_list').appendChild(map_wrap_div);
+*/
+            search_placeDB(score, key_word, category, cnt);
+        }
+    });
+
+    function search_placeDB(score, key_word, category, cnt){
+        cnt += 1;
+        document.getElementById("placesList_"+category).setAttribute('class','placesList');
+        document.getElementById("menu_wrap_"+category).setAttribute('class','menu_wrap','bg_white');
+//        document.getElementById("map_wrap_"+category).setAttribute('class','map_wrap');
+//        document.getElementById("map_"+category).setAttribute('class','map');
+
+        // 마커를 담을 배열입니다
+        var markers = [];
+
+        var mapContainer = document.getElementById('map_list'), // 지도를 표시할 div
+            mapOption = {
+                center: new daum.maps.LatLng(37.566826, 126.9786567), // 지도의 중심좌표
+                level: 3 // 지도의 확대 레벨
+            };
+
+        // 지도를 생성합니다
+        var map = new daum.maps.Map(mapContainer, mapOption);
+
+        // 장소 검색 객체를 생성합니다
+        var ps = new daum.maps.services.Places();
+
+        // 검색 결과 목록이나 마커를 클릭했을 때 장소명을 표출할 인포윈도우를 생성합니다
+        var infowindow = new daum.maps.InfoWindow({zIndex:1});
+
+        searchPlaces();
+
+        // 키워드 검색을 요청하는 함수입니다
+        function searchPlaces() {
+            var keyword = '서울 ' + score.get(0) + ' ' + key_word;
+
+
+            // 장소검색 객체를 통해 키워드로 장소검색을 요청합니다
+            ps.keywordSearch(keyword, placesSearchCB);
+        }
+
+        // 장소검색이 완료됐을 때 호출되는 콜백함수 입니다
+        function placesSearchCB(status, data, pagination) {
+            if (status === daum.maps.services.Status.OK) {
+                // 정상적으로 검색이 완료됐으면
+                // 검색 목록과 마커를 표출합니다
+                displayPlaces(data.places);
+
+                // 페이지 번호를 표출합니다
+                // displayPagination(pagination);
+
+            } else if (status === daum.maps.services.Status.ZERO_RESULT) {
+
+                alert('검색 결과가 존재하지 않습니다.');
+                return;
+
+            } else if (status === daum.maps.services.Status.ERROR) {
+
+                alert('검색 결과 중 오류가 발생했습니다.');
+                return;
+
+            }
+        }
+
+        // 검색 결과 목록과 마커를 표출하는 함수입니다
+        function displayPlaces(places) {
+
+            var listEl = document.getElementById('placesList_'+category),
+            menuEl = document.getElementById('menu_wrap_'+category),
+            fragment = document.createDocumentFragment(),
+            bounds = new daum.maps.LatLngBounds(),
+            listStr = '';
+
+            // 검색 결과 목록에 추가된 항목들을 제거합니다
+            removeAllChildNods(listEl);
+
+            // 지도에 표시되고 있는 마커를 제거합니다
+            removeMarker();
+
+            var ran_num = Math.floor(Math.random() * 15) + 1;
+            alert(places[ran_num].latitude);
+            search_list[cnt] = {'x':places[ran_num].latitude,'y':places[ran_num].longitude,'cnt':cnt};
+            alert('search_list[1].x : '+search_list[1].x);
+            for ( var i=1; i<=search_list.length; i++ ) {
+
+                // 마커를 생성하고 지도에 표시합니다
+                var placePosition = new daum.maps.LatLng(search_list[i].x, search_list[i].y),
+                    marker = addMarker(placePosition, search_list[i].cnt),
+                    itemEl = getListItem(ran_num, places[ran_num], marker); // 검색 결과 항목 Element를 생성합니다
+                // 검색된 장소 위치를 기준으로 지도 범위를 재설정하기위해
+                // LatLngBounds 객체에 좌표를 추가합니다
+                bounds.extend(placePosition);
+
+                fragment.appendChild(itemEl);
+            }
+
+            // 검색결과 항목들을 검색결과 목록 Element에 추가합니다
+            listEl.appendChild(fragment);
+            menuEl.scrollTop = 0;
+
+            // 검색된 장소 위치를 기준으로 지도 범위를 재설정합니다
+            map.setBounds(bounds);
+        }
+
+        // 검색결과 항목을 Element로 반환하는 함수입니다
+        function getListItem(index, places) {
+
+            var el = document.createElement('li'),
+            itemStr =  '<div><span>'+ category +'</span></div>' +
+                        '<div class="info">' +
+                        '   <div><h3>' + places.title + '</h3></div>';
+
+            if (places.newAddress) {
+                itemStr += '    <span>' + places.newAddress + '</span>' +
+                            '   <span class="jibun gray">' +  places.address  + '</span>';
+            } else {
+                itemStr += '    <span>' +  places.address  + '</span>';
+            }
+
+              itemStr += '  <span class="tel">' + places.phone  + '</span>' +
+                        '</div>';
+
+            el.innerHTML = itemStr;
+            el.className = 'item';
+
+            return el;
+        }
+
+        // 마커를 생성하고 지도 위에 마커를 표시하는 함수입니다
+        function addMarker(position, idx, title) {
+            var imageSrc = 'http://t1.daumcdn.net/localimg/localimages/07/mapapidoc/marker_number_blue.png', // 마커 이미지 url, 스프라이트 이미지를 씁니다
+                imageSize = new daum.maps.Size(36, 37),  // 마커 이미지의 크기
+                imgOptions =  {
+                    spriteSize : new daum.maps.Size(36, 691), // 스프라이트 이미지의 크기
+                    spriteOrigin : new daum.maps.Point(0, (idx*46)+10), // 스프라이트 이미지 중 사용할 영역의 좌상단 좌표
+                    offset: new daum.maps.Point(13, 37) // 마커 좌표에 일치시킬 이미지 내에서의 좌표
+                },
+                markerImage = new daum.maps.MarkerImage(imageSrc, imageSize, imgOptions),
+                    marker = new daum.maps.Marker({
+                    position: position, // 마커의 위치
+                    image: markerImage
+                });
+
+            marker.setMap(map); // 지도 위에 마커를 표출합니다
+            markers.push(marker);  // 배열에 생성된 마커를 추가합니다
+
+            return marker;
+        }
+
+        // 지도 위에 표시되고 있는 마커를 모두 제거합니다
+        function removeMarker() {
+            for ( var i = 0; i < markers.length; i++ ) {
+                markers[i].setMap(null);
+            }
+            markers = [];
+        }
+
+
+        // 검색결과 목록 또는 마커를 클릭했을 때 호출되는 함수입니다
+        // 인포윈도우에 장소명을 표시합니다
+        function displayInfowindow(marker, title) {
+            var content = '<div style="padding:5px;z-index:1;">' + title + '</div>';
+
+            infowindow.setContent(content);
+            infowindow.open(map, marker);
+        }
+
+         // 검색결과 목록의 자식 Element를 제거하는 함수입니다
+        function removeAllChildNods(el) {
+            while (el.hasChildNodes()) {
+                el.removeChild (el.lastChild);
+            }
+        }
+    }
+</script>
+</body>
+</html>

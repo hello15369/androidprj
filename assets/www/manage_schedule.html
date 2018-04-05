@@ -1,0 +1,318 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>우리 어디가?</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <script type="text/javascript" src="http://apis.daum.net/maps/maps3.js?apikey=4a803d6e58547d63a8a7fe62267e467c&libraries=services,clusterer,drawing"></script>
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+
+
+    <script>
+      var firebaseApp = firebase.initializeApp({
+         apiKey: "AIzaSyCNFFa-0zQ8BBsTkNM4076wMlaaEfNiMEI",
+         authDomain: "mobiletest-b5fc1.firebaseapp.com",
+         databaseURL: "https://mobiletest-b5fc1.firebaseio.com",
+         storageBucket: "mobiletest-b5fc1.appspot.com",
+         messagingSenderId: "891861159351"
+      })
+
+      var para = document.location.href.split("?");
+      var para_split = para[1].split("&");
+      var uid = para_split[0].split("=")[1];
+      var email = para_split[1].split("=")[1];
+   </script>
+</head>
+
+<body ng-app="manage_schedule" ng-controller="manage">
+
+<div data-role="page" id="main">
+    <div data-role="header">
+        <a ng-click="main()" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+        <h1>일정 관리</h1>
+    </div>
+    <div role="content">
+        <div class="ui-grid-a">
+            <div class="ui-block-a"><a href="#regular"><button>정기적 일정 등록</button></a></div>
+            <div class="ui-block-b"><a href="#temp"><button>일시적 일정 등록</button></a></div>
+        </div>
+        <div>
+            <ul data-role="listview">
+                <li data-role="list-divider">
+                    정기적 일정
+                </li>
+                <li ng-repeat="message in regulars">
+                    {{message.day}} {{message.title}} {{message.place}} {{ message.start | date:'h:mm a' }} ~ {{ message.end | date :'h:mm a' }}
+                </li>
+            </ul>
+            <ul data-role="listview">
+                <li data-role="list-divider">
+                    일시적 일정
+                </li>
+                <li ng-repeat="message in messages">
+                    {{message.date | date:'yy-MM-dd'}} {{message.title}} {{message.place}} {{ message.start | date:'h:mm a' }} ~ {{ message.end | date :'h:mm a' }}
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+
+<div data-role="page" id="regular">
+    <form ng-submit="addRegular()">
+        <div data-role="header">
+            <a href="#main" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+            <h1>정기적 일정 등록</h1>
+            <button type="submit" id="submit1" value="Submit">등록하기</button>
+        </div>
+    </form>
+    <div role="content">
+        <div data-role="controlgroup" data-type="horizontal" data-mini="true">
+            <input ng-repeat="dayName in days" type="checkbox" name="selectedDays[]" value="{{dayName}}" id="{{dayName}}" ng-checked="selection.indexOf(dayName) > -1"
+                   ng-click="toggleSelection(dayName)"><label ng-repeat="dayName in days" for="{{dayName}}">{{dayName}}</label>
+        </div>
+
+        <input type="text" data-clear-btn="true" name="text-3" ng-model="regtitle" placeholder="일정명을 입력하세요" >
+        <input type="text" data-clear-btn="true" name="text-3" ng-model="regplace" placeholder="주소를 입력하세요" >
+        <div class="ui-grid-a">
+            <div class="ui-block-a"><input type="time" ng-model="regstart" class="input-time" name="text-3" placeholder="시작 시간" >부터</div>
+            <div class="ui-block-b"><input type="time" ng-model="regend" class="input-time" name="text-3" placeholder="마치는 시간" >까지</div>
+        </div>
+    </div>
+</div>
+
+
+<div data-role="page" id="temp">
+    <form ng-submit="addMessage()">
+        <div data-role="header">
+            <a href="#main" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+            <h1>일시적 일정 등록</h1>
+            <button type="submit">등록하기</button>
+        </div>
+    </form>
+    <div role="content">
+        <input type="date" ng-model="date" placeholder="날짜" >
+        <div class="ui-grid-a">
+            <div class="ui-block-a"><input type="time" ng-model="start" class="input-time" name="text-3" placeholder="시작 시간" >부터</div>
+            <div class="ui-block-b"><input type="time" ng-model="end" class="input-time" name="text-3" placeholder="마치는 시간" >까지</div>
+        </div>
+        <input type="text" data-clear-btn="true" name="text-3" ng-model="title" placeholder="일정명을 입력하세요" >
+        <input type="text" data-clear-btn="true" name="text-3" ng-model="place" placeholder="주소를 입력하세요" >
+        <button ng-click="showMap()">지도 보기</button>
+        <div id="map" style="width:100%;height:220px;"></div>
+    </div>
+</div>
+
+
+
+
+<script>
+       // define our app and dependencies (remember to include firebase!)
+   var app = angular.module("manage_schedule", ["firebase"]);
+
+   // firebase에서 메세지들 가지고옴.
+   app.factory("chatMessages", ["$firebaseArray",
+     function($firebaseArray) {
+      // create a reference to the database location where we will store our data
+
+      var ref = firebase.database().ref('users/'+uid+ '/schedule/'+'temp/');
+
+      // this uses AngularFire to create the synchronized array
+      return $firebaseArray(ref);
+     }
+   ]);
+   app.factory("regularSchedules", ["$firebaseArray",
+     function($firebaseArray) {
+      // create a reference to the database location where we will store our data
+
+      var ref = firebase.database().ref('users/'+uid+ '/schedule/'+'regular/');
+
+      // this uses AngularFire to create the synchronized array
+      return $firebaseArray(ref);
+     }
+   ]);
+
+   app.controller("manage", ["$scope", "chatMessages","regularSchedules",
+     // we pass our new chatMessages factory into the controller
+     function($scope, chatMessages,regularSchedules) {
+
+      // we add chatMessages array to the scope to be used in our ng-repeat
+
+      $scope.messages = chatMessages;
+      $scope.regulars = regularSchedules;
+      $scope.days = ['mon', 'tue', 'wed', 'thr','fri','sat','sun'];
+      $scope.selection = [];
+
+      $scope.main = function(){
+       alert("main");
+        window.location="main.html?uid=" + uid + "&email=" + email;
+        }
+
+       $scope.toggleSelection = function toggleSelection(dayName) {
+            var idx = $scope.selection.indexOf(dayName);
+
+            // is currently selected
+            if (idx > -1) {
+                $scope.selection.splice(idx, 1);
+            }
+
+            // is newly selected
+            else {
+                $scope.selection.push(dayName);
+            }
+         };
+
+      // a method to create new messages; called by ng-submit
+      $scope.addMessage = function() {
+        // calling $add on a synchronized array is like Array.push(),
+        // except that it saves the changes to our database!
+        var mint = $scope.date;
+        var year = mint.getFullYear();
+        var month = mint.getMonth();
+        var dat = mint.getDate();
+        var mydate= year+'-'+month+'-'+dat;
+        mydate= mint.valueOf();
+
+        var time1 =$scope.start;
+        var mytime1 = time1.toLocaleTimeString();
+        mytime1= time1.valueOf();
+        var time2 = $scope.end;
+        var mytime2 = time2.toLocaleTimeString();
+        mytime2= time2.valueOf();
+
+
+        $scope.messages.$add({
+            date: $scope.date.valueOf(),
+            start: mytime1,
+         end: mytime2,
+         title: $scope.title,
+         place: $scope.place
+        });
+
+        // reset the message input
+        $scope.place = "";
+      };
+
+
+      $scope.addRegular = function() {
+        // calling $add on a synchronized array is like Array.push(),
+        // except that it saves the changes to our database!
+        $scope.regulars.$add({
+          day : $scope.selection,
+         title: $scope.regtitle,
+         place: $scope.regplace,
+         start: $scope.regstart.valueOf(),
+         end: $scope.regend.valueOf()
+        });
+        // reset the message input
+        $scope.regplace = "";
+      };
+
+      // if the messages are empty, add something for fun!
+//      $scope.messages.$loaded(function() {
+//        if ($scope.messages.length === 0) {
+//         $scope.messages.$add({
+//           from: "Firebase Docs",
+//           title: "enter something"
+//
+//         });
+//        }
+//      });
+
+      $scope.showMap = function(){
+            var mapContainer = document.getElementById('map'), // 지도를 표시할 div
+                mapOption = {
+                    center: new daum.maps.LatLng(33.450701, 126.570667), // 지도의 중심좌표
+                    level: 3 // 지도의 확대 레벨
+                };
+
+            // 지도를 생성합니다
+            var map = new daum.maps.Map(mapContainer, mapOption);
+
+            // 주소-좌표 변환 객체를 생성합니다
+            var geocoder = new daum.maps.services.Geocoder();
+
+            // 주소로 좌표를 검색합니다
+            geocoder.addr2coord($scope.place, function(status, result) {
+
+                // 정상적으로 검색이 완료됐으면
+                 if (status === daum.maps.services.Status.OK) {
+
+                    var coords = new daum.maps.LatLng(result.addr[0].lat, result.addr[0].lng);
+
+                    // 결과값으로 받은 위치를 마커로 표시합니다
+                    var marker = new daum.maps.Marker({
+                        map: map,
+                        position: coords
+                    });
+
+                    // 지도의 중심을 결과값으로 받은 위치로 이동시킵니다
+                    map.setCenter(coords);
+                }
+            });
+
+
+            var marker = new daum.maps.Marker(), // 클릭한 위치를 표시할 마커입니다
+                infowindow = new daum.maps.InfoWindow({zindex:1}); // 클릭한 위치에 대한 주소를 표시할 인포윈도우입니다
+
+            // 현재 지도 중심좌표로 주소를 검색해서 지도 좌측 상단에 표시합니다
+            searchAddrFromCoords(map.getCenter(), displayCenterInfo);
+
+            // 지도를 클릭했을 때 클릭 위치 좌표에 대한 주소정보를 표시하도록 이벤트를 등록합니다
+            daum.maps.event.addListener(map, 'click', function(mouseEvent) {
+                searchDetailAddrFromCoords(mouseEvent.latLng, function(status, result) {
+                    if (status === daum.maps.services.Status.OK) {
+                        var detailAddr = !!result[0].roadAddress.name ? '<div>도로명주소 : ' + result[0].roadAddress.name + '</div>' : '';
+                        detailAddr += '<div>지번 주소 : ' + result[0].jibunAddress.name + '</div>';
+
+                        var content = '<div class="bAddr">' +
+                                        '<span class="title">법정동 주소정보</span>' +
+                                        detailAddr +
+                                    '</div>';
+
+                        // 마커를 클릭한 위치에 표시합니다
+                        marker.setPosition(mouseEvent.latLng);
+                        marker.setMap(map);
+
+                        // 인포윈도우에 클릭한 위치에 대한 법정동 상세 주소정보를 표시합니다
+                        infowindow.setContent(content);
+                        infowindow.open(map, marker);
+                    }
+                });
+            });
+
+            // 중심 좌표나 확대 수준이 변경됐을 때 지도 중심 좌표에 대한 주소 정보를 표시하도록 이벤트를 등록합니다
+            daum.maps.event.addListener(map, 'idle', function() {
+                searchAddrFromCoords(map.getCenter(), displayCenterInfo);
+            });
+
+            function searchAddrFromCoords(coords, callback) {
+                // 좌표로 행정동 주소 정보를 요청합니다
+                geocoder.coord2addr(coords, callback);
+            }
+
+            function searchDetailAddrFromCoords(coords, callback) {
+                // 좌표로 법정동 상세 주소 정보를 요청합니다
+                geocoder.coord2detailaddr(coords, callback);
+            }
+
+            // 지도 좌측상단에 지도 중심좌표에 대한 주소정보를 표출하는 함수입니다
+            function displayCenterInfo(status, result) {
+                if (status === daum.maps.services.Status.OK) {
+                    var infoDiv = document.getElementById('centerAddr');
+                    infoDiv.innerHTML = result[0].fullName;
+                }
+            }
+        }
+     }
+   ]);
+
+</script>
+
+</body>
+</html>

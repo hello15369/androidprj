@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>우리 어디가?</title>
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+  <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+  <script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+
+  <script>
+    var firebaseApp = firebase.initializeApp({
+		apiKey: "AIzaSyCNFFa-0zQ8BBsTkNM4076wMlaaEfNiMEI",
+        authDomain: "mobiletest-b5fc1.firebaseapp.com",
+        databaseURL: "https://mobiletest-b5fc1.firebaseio.com",
+        storageBucket: "mobiletest-b5fc1.appspot.com",
+        messagingSenderId: "891861159351"
+    })
+  </script>
+</head>
+<body>
+
+
+<div data-role="page" id="signIn">
+  <p>로그인이 필요합니다 !</p>
+  <div data-role="content">
+    <input type="email" id="si_id" placeholder="이메일 주소"/>
+    <input type="password" id="si_pw" placeholder="비밀번호"/>
+    <button id="signInBtn">로그인</button>
+    <a href="#signUp"><button>회원가입</button></a>
+  </div>
+</div>
+
+<div data-role="page" id="signUp">
+  <div data-role="header">
+    <a href="#signIn" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+    <h1>회원가입</h1>
+    <button id="signUpBtn">가입하기</button>
+  </div>
+  <div data-role="content">
+    <input type="email" id="su_id" placeholder="이메일 주소">
+    <input type="password" id="su_pw" placeholder="비밀번호(최소 6자)">
+    <input type="password" id="su_cf" placeholder="비밀번호 재입력">
+  </div>
+</div>
+
+
+
+
+
+
+<script type="text/javascript">
+
+	function signInUser(event) {
+		var id = $("#si_id").val();
+		var pw = $("#si_pw").val();
+		firebase.auth().signInWithEmailAndPassword(id, pw)
+				.then(function() {
+				    alert('로그인 되었습니다.');
+
+					var uname, uemail, uphotoUrl, uid;
+                    var user = firebase.auth().currentUser;
+                    if (user) {
+                      // User is signed in.
+                      var displayName = user.displayName;
+                      var email = user.email;
+                      var emailVerified = user.emailVerified;
+                      var photoURL = user.photoURL;
+                      var isAnonymous = user.isAnonymous;
+                      var uid = user.uid;
+                      var refreshToken = user.refreshToken;
+                      var providerData = user.providerData;
+                      // [START_EXCLUDE silent]
+  window.location="main.html?uid=" + uid + "&email=" + email;
+                    }
+				})
+				.catch(function(e) {
+					lastWork = "signIn";
+					$("#error #errmsg").html(e.message);
+					return;
+				});
+	}
+
+
+    function signUpUser(event){
+		var id = $("#su_id").val();
+		var pw = $("#su_pw").val();
+		var cf = $("#su_cf").val();
+
+		if(pw != cf) {
+			alert("Password does not match the confirm password.");
+			return;
+		}
+
+		firebase.auth().createUserWithEmailAndPassword(id, pw)
+				.then(function() {
+					alert('가입을 축하합니다!');
+					location.replace('login.html');
+				})
+				.catch(function(e) {
+					lastWork = "signUp";
+					$("#error #errmsg").html(e.message);
+					return;
+				});
+	}
+
+
+	document.getElementById("signInBtn").addEventListener("click", signInUser);
+	document.getElementById("signUpBtn").addEventListener("click", signUpUser);
+
+</script>
+
+
+</body>
+</html>

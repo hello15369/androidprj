@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>우리 어디가?</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+</head>
+
+<script>
+		var firebaseApp = firebase.initializeApp({
+			apiKey: "AIzaSyCNFFa-0zQ8BBsTkNM4076wMlaaEfNiMEI",
+			authDomain: "mobiletest-b5fc1.firebaseapp.com",
+			databaseURL: "https://mobiletest-b5fc1.firebaseio.com",
+			storageBucket: "mobiletest-b5fc1.appspot.com",
+			messagingSenderId: "891861159351"
+		})
+	</script>
+
+
+<body>
+
+<div ng-app="sampleApp" ng-controller="ChatCtrl">
+    <ul class="chatbox">
+        <li ng-repeat="message in messages">{{ message.from }}: {{ message.content }}</li>
+    </ul>
+    <form ng-submit="addMessage()">
+        <input type="text" ng-model="message">
+        <input type="submit" value="Add Message">
+    </form>
+</div>
+
+
+<script>
+    // define our app and dependencies (remember to include firebase!)
+var app = angular.module("sampleApp", ["firebase"]);
+
+// this factory returns a synchronized array of chat messages
+app.factory("chatMessages", ["$firebaseArray",
+  function($firebaseArray) {
+    // create a reference to the database location where we will store our data
+    var ref = firebase.database().ref();
+
+    // this uses AngularFire to create the synchronized array
+    return $firebaseArray(ref);
+  }
+]);
+
+app.controller("ChatCtrl", ["$scope", "chatMessages",
+  // we pass our new chatMessages factory into the controller
+  function($scope, chatMessages) {
+    $scope.user = "Guest " + Math.round(Math.random() * 100);
+
+    // we add chatMessages array to the scope to be used in our ng-repeat
+    $scope.messages = chatMessages;
+
+    // a method to create new messages; called by ng-submit
+    $scope.addMessage = function() {
+      // calling $add on a synchronized array is like Array.push(),
+      // except that it saves the changes to our database!
+      $scope.messages.$add({
+        from: $scope.user,
+        content: $scope.message
+      });
+
+      // reset the message input
+      $scope.message = "";
+    };
+
+    // if the messages are empty, add something for fun!
+    $scope.messages.$loaded(function() {
+      if ($scope.messages.length === 0) {
+        $scope.messages.$add({
+          from: "Firebase Docs",
+          content: "Hello world!"
+        });
+      }
+    });
+  }
+]);
+</script>
+
+</body>
+</html>

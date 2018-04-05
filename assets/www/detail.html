@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>우리 어디가?</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+
+    <link rel="stylesheet" href="css/calendar.css">
+    <script src="js/calendar.js"></script>
+
+    <script>
+		var firebaseApp = firebase.initializeApp({
+			apiKey: "AIzaSyCNFFa-0zQ8BBsTkNM4076wMlaaEfNiMEI",
+			authDomain: "mobiletest-b5fc1.firebaseapp.com",
+			databaseURL: "https://mobiletest-b5fc1.firebaseio.com",
+			storageBucket: "mobiletest-b5fc1.appspot.com",
+			messagingSenderId: "891861159351"
+		})
+		var para = document.location.href.split("?");
+		var para_split = para[1].split("&");
+		var uid = para_split[0].split("=")[1];
+		var email = para_split[1].split("=")[1];
+
+
+	</script>
+
+</head>
+
+<body>
+
+
+<div data-role="page" id="invite">
+    <div data-role="header">
+        <h1>개인정보 입력</h1>
+    </div>
+    <div role="content">
+        <form id="form">
+            <input type="text" placeholder="이름" id="name" required>
+            <div data-role="controlgroup" data-type="horizontal">
+                <input type="radio" value="남자" id="male" name="gender"><label for="male">남</label>
+                <input type="radio" value="여자" id="female" name="gender"><label for="female">여</label>
+            </div>
+            <input type="text" placeholder="생년월일(8자, ex-19960423)" id="birth" required>
+            <input type="text" placeholder="주소(ex-서울 신수동)" id="address" required>
+            <input type="number" placeholder="휴대폰번호(-없이 입력)" id="phone" required>
+
+            <button type="submit" class="btn" onclick="submitDetail()">등록하기</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function submitDetail() {
+        var name = $('#name').val();
+        var gender = $(':input[name=gender]:radio:checked').val();
+        var birth = $('#birth').val();
+        var address = $('#address').val();
+        var phone = $('#phone').val();
+        firebase.database().ref('users/' + uid).set({
+            name: name,
+            gender: gender,
+            birth: birth,
+            address: address,
+            phone: phone
+        }).then(function () {
+                alert('개인정보 입력이 완료되었습니다.');
+                window.location="main.html?uid=" + uid + "&email=" + email;
+            });
+    }
+</script>
+
+</body>
+</html>

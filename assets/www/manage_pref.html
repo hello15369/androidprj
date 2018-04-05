@@ -1,0 +1,204 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>우리 어디가?</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <script type="text/javascript" src="http://apis.daum.net/maps/maps3.js?apikey=4a803d6e58547d63a8a7fe62267e467c&libraries=services,clusterer,drawing"></script>
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+
+
+    <script>
+      var firebaseApp = firebase.initializeApp({
+         apiKey: "AIzaSyCNFFa-0zQ8BBsTkNM4076wMlaaEfNiMEI",
+         authDomain: "mobiletest-b5fc1.firebaseapp.com",
+         databaseURL: "https://mobiletest-b5fc1.firebaseio.com",
+         storageBucket: "mobiletest-b5fc1.appspot.com",
+         messagingSenderId: "891861159351"
+      })
+
+      var para = document.location.href.split("?");
+      var para_split = para[1].split("&");
+      var uid = para_split[0].split("=")[1];
+      var email = para_split[1].split("=")[1];
+   </script>
+</head>
+
+<body ng-app="manage_pref" ng-controller="manage">
+
+
+<div data-role="page" id="main">
+    <form ng-submit="addPref()">
+
+        <div data-role="header">
+            <a ng-click="main()" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+            <h1>선호도 관리</h1>
+            <button type="submit" value="Submit">등록하기</button>
+        </div>
+    </form>
+    <div data-role="content" role="main">
+        <div>
+            <div data-role="collapsible">
+                <h3>음식</h3>
+                <div role="content">
+                    <h3>음식에 대한 선호도 ( 0 ~ 5점)</h3>
+                    <ul data-role="listview">
+                        <li><label for="korean">한식</label><input type="range" ng-model="food.korean" id="korean" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="japanese">일식</label><input type="range" ng-model="food.japanese" id="japanese" value='3' min='0' max='5'onchange="showVal(this.value)" required></li>
+                        <li><label for="chinese">중식</label><input type="range" ng-model="food.chinese" id="chinese" value='3' min='0' max='5'onchange="showVal(this.value)" required></li>
+                        <li><label for="asian">동남아</label><input type="range" ng-model="food.asian" id="asian" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="western">양식</label><input type="range" ng-model="food.western" id="western" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div data-role="collapsible">
+                <h3>주류</h3>
+
+                <div role="content">
+                    <h3>주종에 대한 선호도 ( 0 ~ 5점)</h3>
+                    <ul data-role="listview">
+                        <li><label for="soju">소주</label><input type="range" ng-model="drink.soju" id="soju" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="beer">맥주</label><input type="range" ng-model="drink.beer" id="beer" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="mak">막걸리</label><input type="range" ng-model="drink.mak" id="mak" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="sake">사케</label><input type="range" ng-model="drink.sake" id="sake" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="yang">양주</label><input type="range" ng-model="drink.yang" id="yang" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="goryang">고량주</label><input type="range" ng-model="drink.goryang" id="goryang" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                    </ul>
+                </div>
+            </div>
+
+
+            <div data-role="collapsible">
+                <h3>장소</h3>
+                <div role="content">
+                    <ul data-role="listview">
+
+                        <li><label for="trans">교통이 편리한 곳</label><input type="range" ng-model="place.trans" id="trans" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="food">다양한 종류의 맛집이 있는 곳</label><input type="range" ng-model="place.food" id="food" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="drink">다양한 술집</label><input type="range" ng-model="place.drink" id="drink" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="ent">오락문화와 놀거리</label><input type="range" ng-model="place.ent" id="ent" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="famous">유명해서 방문해보고 싶은 곳</label><input type="range" ng-model="place.famous" id="famous" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="people">사람들이 북적이는 곳</label><input type="range" ng-model="place.people" id="people" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="trail">아름다운 산책로가 있는 곳</label><input type="range" ng-model="place.trail" id="trail" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                        <li><label for="att">문화재, 공연 등 볼거리가 많은 곳</label><input type="range" ng-model="place.att" id="att" value='3' min='0' max='5' onchange="showVal(this.value)" required></li>
+                    </ul>
+                </div>
+            </div>
+            <div data-role="collapsible">
+                <h3>놀이</h3>
+
+                <div role="content">
+                    <!-- 저장된 장소 list를 띄워줌      좋아하면 3, 싫어하면 0, 가보고싶으면 2-->
+                    <ul data-role="listview" data-filter="true" data-filter-placeholder="평소 가는 곳 / 가보고 싶은 곳">
+                        <li><fieldset data-role="controlgroup" data-type="horizontal"><legend><h3>노래방</h3></legend>
+                            <input type="radio" id='a1' name="1" value=3 ng-model="play.sing"><label for="a1">좋아함</label>
+                            <input type="radio" id='b1' name="1" value=0 ng-model="play.sing"><label for="b1">싫어함</label>
+                            <input type="radio" id='c1' name="1" value=2  ng-model="play.sing"><label for="c1">가보고 싶음</label></fieldset></li>
+                        <li><fieldset data-role="controlgroup" data-type="horizontal"><legend><h3>당구장</h3></legend>
+                            <input type="radio" id='a2' name="2" value=3 ng-model="play.ball"><label for="a2">좋아함</label>
+                            <input type="radio" id='b2' name="2" value=0 ng-model="play.ball"><label for="b2">싫어함</label>
+                            <input type="radio" id='c2' name="2" value=2 ng-model="play.ball"><label for="c2">가보고 싶음</label></fieldset></li>
+                        <li><fieldset data-role="controlgroup" data-type="horizontal"><legend><h3>고양이 카페</h3></legend>
+                            <input type="radio" id='a3' name="3" value=3 ng-model="play.cat"><label for="a3">좋아함</label>
+                            <input type="radio" id='b3' name="3" value=0 ng-model="play.cat"><label for="b3">싫어함</label>
+                            <input type="radio" id='c3' name="3" value=2 ng-model="play.cat"><label for="c3">가보고 싶음</label></fieldset></li>
+                        <li><fieldset data-role="controlgroup" data-type="horizontal"><legend><h3>방탈출 카페</h3></legend>
+                            <input type="radio" id='a4' name="4" value=3 ng-model="play.quiz"><label for="a4">좋아함</label>
+                            <input type="radio" id='b4' name="4" value=0 ng-model="play.quiz"><label for="b4">싫어함</label>
+                            <input type="radio" id='c4' name="4" value=2 ng-model="play.quiz"><label for="c4">가보고 싶음</label></fieldset></li>
+                    </ul>
+                </div>
+            </div>
+            <div data-role="collapsible">
+                <h3>거리</h3>
+                <div role="content">
+                    <ul data-role="listview">
+                        <li><label for="ave">평소 약속 장소에 가기위해 이동하는 시간 (분 단위) :</label><input ng-model="time.ave" type="range" id="ave" value="30" min="0" max="240" onchange="showVal(this.value)" required></li>
+                        <li><label for="durab">약속 장소에 가기위해 들일수 있는 시간 (분 단위) :</label><input ng-model="time.durab" type="range" id="durab" value="90" min="0" max="240" onchange="showVal(this.value)" required></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+<script>
+   // define our app and dependencies (remember to include firebase!)
+  function showVal(newVal){
+  document.getElementById("valBox").innerHTML=newVal;
+  }
+   var app = angular.module("manage_pref", ["firebase"]);
+
+   // firebase에서 메세지들 가지고옴.
+   app.factory("preferences", ["$firebaseArray",
+     function($firebaseArray) {
+      // create a reference to the database location where we will store our data
+      var ref = firebase.database().ref('users/'+uid+ '/preference');
+      // this uses AngularFire to create the synchronized array
+      return $firebaseArray(ref);
+     }
+   ]);
+
+   app.controller("manage", ["$scope", "preferences","$firebaseObject",
+     // we pass our new chatMessages factory into the controller
+     function($scope, preferences,$firebaseObject) {
+
+      // we add chatMessages array to the scope to be used in our ng-repeat
+      $scope.preferences = preferences;
+      ref= $scope.preferences.$ref();
+      var syncObject = $firebaseObject(ref);
+
+      $scope.main = function(){
+       alert("main");
+        window.location="main.html?uid=" + uid + "&email=" + email;
+        }
+
+
+      // a method to create new messages; called by ng-submit
+      $scope.addPref = function() {
+
+        //sync object에 넣고나서 save
+        syncObject.food={korean : $scope.food.korean, japanese : $scope.food.japanese,chinese : $scope.food.chinese,asian : $scope.food.asian,western : $scope.food.western};
+        syncObject.drink={soju : $scope.drink.soju,
+                beer : $scope.drink.beer,
+                mak : $scope.drink.mak,
+                sake : $scope.drink.sake,
+                yang : $scope.drink.yang,
+                goryang : $scope.drink.goryang};
+        syncObject.place={    trans : $scope.place.trans,
+                food : $scope.place.food,
+                drink : $scope.place.drink,
+                ent : $scope.place.ent,
+                famous : $scope.place.famous,
+                people : $scope.place.people,
+                trail : $scope.place.trail,
+                att : $scope.place.att};
+        syncObject.play={
+            sing:$scope.play.sing,
+            ball:$scope.play.ball,
+            cat:$scope.play.cat,
+            quiz:$scope.play.quiz
+        }
+        syncObject.distance={
+            ave:$scope.time.ave,
+            durab:$scope.time.durab
+        }
+        syncObject.$save().then(function(ref) {
+            alert("저장완료");
+        }, function(error) {
+            alert("Error");
+        });
+
+      };
+      }
+   ]);
+  </script>
+</html>

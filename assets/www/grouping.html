@@ -1,0 +1,188 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>우리 어디가?</title>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+	<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+	<script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+
+
+	<script>
+      var firebaseApp = firebase.initializeApp({
+         apiKey: "AIzaSyCNFFa-0zQ8BBsTkNM4076wMlaaEfNiMEI",
+         authDomain: "mobiletest-b5fc1.firebaseapp.com",
+         databaseURL: "https://mobiletest-b5fc1.firebaseio.com",
+         storageBucket: "mobiletest-b5fc1.appspot.com",
+         messagingSenderId: "891861159351"
+      });
+
+      var para = document.location.href.split("?");
+      var para_split = para[1].split("&");
+      var uid = para_split[0].split("=")[1];
+      var email = para_split[1].split("=")[1];
+
+   </script>
+</head>
+<body ng-app="groupApp" ng-controller="groupCtrl">
+
+<div data-role="page" id="invite">
+	<div data-role="header">
+		<a href="home.html" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+		<h1>그룹원 초대</h1>
+		<a href="#setting" data-icon="carat-r">그룹 설정</a>
+	</div>
+
+	<div role="content">
+		<form ng-submit="addGroups()">
+
+			<div data-role="controlgroup">
+				<ul data-role="listview" data-filter="true" data-filter-placeholder="친구 이름 검색" id="userList">
+					<li ng-repeat="user in users">
+						<input type="checkbox" value="{{user.name}}" id="{{user.name}}" ng-checked="selections.indexOf(user.name) > -1"
+							   ng-click="toggleSelections(user.name)">
+						<label for="{{user.name}}">{{user.name}}</label>
+					</li>
+				</ul>
+			</div>
+	</div>
+</div>
+
+
+<div data-role="page" id="setting">
+	<div data-role="header">
+		<a href="#invite" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+		<h1>그룹 만들기</h1>
+	</div>
+	<div role="content">
+		<fieldset>
+			<legend>그룹명</legend>
+			<input type="text" ng-model="groupName">
+		</fieldset>
+		<fieldset>
+			<legend>그룹 성격</legend>
+			<input type="radio" name="friend" id="c1" ng-click="characterSelection('친구')">
+			<label for="c1">친구</label>
+			<input type="radio" name="friend" id="c2" ng-click="characterSelection('직장')">
+			<label for="c2">직장</label>
+			<input type="radio" name="friend" id="c3" ng-click="characterSelection('동호회')">
+			<label for="c3">동호회</label>
+			<input type="radio" name="friend" id="c4" ng-click="characterSelection('연인')">
+			<label for="c4">연인</label>
+		</fieldset>
+	</div>
+	<input type="submit" value="완료" ng-click="addGroups()">
+	</form>
+</div>
+
+
+<script>
+          // define our app and dependencies (remember to include firebase!)
+   var app = angular.module("groupApp", ["firebase"]);
+
+   // firebase에서 메세지들 가지고옴.
+   app.factory("userList", ["$firebaseArray",
+     function($firebaseArray) {
+      // create a reference to the database location where we will store our data
+      var ref = firebase.database().ref('users/');
+
+      // this uses AngularFire to create the synchronized array
+      return $firebaseArray(ref);
+     }
+   ]);
+
+   app.factory("groupList", ["$firebaseArray",
+     function($firebaseArray) {
+      // create a reference to the database location where we will store our data
+      var ref = firebase.database().ref('groups/');
+
+      // this uses AngularFire to create the synchronized array
+      return $firebaseArray(ref);
+     }
+   ]);
+
+
+   app.controller("groupCtrl", ["$scope", "userList","groupList",
+     // we pass our new chatMessages factory into the controller
+     function($scope, userList,groupList) {
+
+      // we add chatMessages array to the scope to be used in our ng-repeat
+      $scope.users = userList;
+      $scope.groups = groupList;
+      $scope.selections = [];
+      $scope.groupName;
+      $scope.groupCharacter;
+      $scope.userkey;
+
+      $scope.toggleSelections = function (userName) {
+           var selectKey;
+
+           for(var j in $scope.users)
+           {
+              var person = $scope.users[j].name;
+
+              if(person === userName)
+              {
+
+                selectKey = $scope.users[j].$id;
+
+              }
+           }
+
+         var idx = $scope.selections.indexOf(selectKey);
+         //alert($scope.selections);
+
+             // is currently selected
+             if (idx > -1) {
+               $scope.selections.splice(idx, 1);
+             }
+
+             // is newly selected
+             else {
+                 $scope.selections.push(selectKey);
+             }
+       };
+
+       $scope.characterSelection = function (character) {
+
+         $scope.groupCharacter = character;
+
+       };
+
+       $scope.addGroups = function() {
+       // calling $add on a synchronized array is like Array.push(),
+       // except that it saves the changes to our database
+       $scope.selections.push(uid);
+
+       $scope.groups.$add({
+        groupName: $scope.groupName,
+        character: $scope.groupCharacter,
+        member: $scope.selections
+       }).then(function(ref){
+
+        $scope.userkey = ref.key;
+
+        var testref = firebase.database().ref('users/'+uid+'/group/'+$scope.userkey);
+        testref.set(true);
+
+        for(var i in $scope.selections)
+        {
+
+           var userRef=firebase.database().ref('users/'+$scope.selections[i]+'/group/'+$scope.userkey);
+           userRef.set(true);
+        }
+      });
+
+       // reset the message input
+       //$scope.selections = "";
+      };
+    }
+  ]);
+</script>
+
+</body>
+</html>

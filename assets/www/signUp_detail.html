@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>우리 어디가?</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+</head>
+
+    <script>
+		var firebaseApp = firebase.initializeApp({
+			apiKey: "AIzaSyCNFFa-0zQ8BBsTkNM4076wMlaaEfNiMEI",
+			authDomain: "mobiletest-b5fc1.firebaseapp.com",
+			databaseURL: "https://mobiletest-b5fc1.firebaseio.com",
+			storageBucket: "mobiletest-b5fc1.appspot.com",
+			messagingSenderId: "891861159351"
+		})
+		var uname, uemail, uphotoUrl, uid;
+		var user = firebase.auth().currentUser;
+		if (user != null) {
+			uname = user.displayName;
+			uemail = user.email;
+			uphotoUrl = user.photoURL;
+			uid = user.uid;
+		}
+		else {
+			alert('로그인 오류');
+			location.replace('login');
+		}
+	</script>
+
+
+<body>
+
+<div data-role="page" id="signUp_detail" ng-controller="signUp_detail">
+    <div data-role="header">
+        <h1>회원정보 설정</h1>
+    </div>
+    <div data-role="content">
+        <input type="text" placeholder="이름">
+        <div data-role="controlgroup">
+            <input type="checkbox" id="male"><label for="male">남</label>
+            <input type="checkbox" id="female"><label for="female">녀</label>
+        </div>
+        <input type="date" placeholder="생년월일">
+        <input type="button" id="input_detail" value="확인">
+    </div>
+</div>
+
+
+<script>
+    var app = angular.module("main", ["firebase"]);
+
+    app.controller("signUp", ["$scope", "$firebaseArray",
+        function($scope, $firebaseArray){
+            $scope.addUser = function(){
+                var ref = firebase.database().ref().child('users');
+                $scope.users = $firebaseArray(ref);
+                $scope.users.$set({
+                    email: $scope.email,
+                    info : {
+                        address: null,
+                        birth: null,
+                        gender: null,
+                        groups: null,
+                        name: null,
+                        phone: null,
+                        preference: null,
+                        pw: $scope.pwd,
+                        schedule: null,
+                        setting: null}
+                    });
+            }
+    }]);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>우리 어디가?</title>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+	<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+	<script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+
+	<link rel="stylesheet" href="css/calendar.css">
+	<script src="js/calendar.js"></script>
+
+	<script>
+      var firebaseApp = firebase.initializeApp({
+         apiKey: "AIzaSyCNFFa-0zQ8BBsTkNM4076wMlaaEfNiMEI",
+         authDomain: "mobiletest-b5fc1.firebaseapp.com",
+         databaseURL: "https://mobiletest-b5fc1.firebaseio.com",
+         storageBucket: "mobiletest-b5fc1.appspot.com",
+         messagingSenderId: "891861159351"
+      })
+   </script>
+
+
+
+	<!-- Fire the plugin onDocumentReady -->
+	<script type="text/javascript">
+      var para = document.location.href.split("?");
+      var para_split = para[1].split("&");
+      var uid = para_split[0].split("=")[1];
+      var email = para_split[1].split("=")[1];
+      var gid = para_split[2].split("=")[1];
+
+
+      window.onload = function () {
+         kCalendar('kCalendar');
+      };
+   </script>
+
+	<style type="text/css">
+     .profile{
+        width: 50px;
+        height: 50px;
+     }
+
+     .textarea{
+        width: 100%;
+        height: 70px;
+     }
+
+     #time-rec-on, #time-rec-off{
+        display : none;
+        background-color : white;
+     }
+
+  </style>
+
+</head>
+
+<body ng-app="group"  ng-controller="postCtrl">
+
+
+<div data-role="page" id="main">
+	<div data-role="panel" id="panel" data-position="right" data-theme="a" data-position-fixed="true" data-display="overlay">
+		<hr>
+		<div>
+			<ul>
+				<li><a href="">공지1</a></li>
+				<li><a href="">공지2</a></li>
+				<li><a href="">공지3</a></li>
+			</ul>
+		</div>
+		<hr>
+		<div class="ui-grid-b">
+			<div class="ui-block-a"><a data-iconpos="notext" href="#recommend" data-role="button" data-icon="location"></a></div>
+			<div class="ui-block-b"><a data-iconpos="notext" href="#calendar" data-role="button" data-icon="calendar"></a></div>
+			<div class="ui-block-c"><a data-iconpos="notext" href="#meeting" data-role="button" data-icon="bars"></a></div>
+		</div>
+		<hr>
+		<div>
+			사진
+		</div>
+		<hr>
+		<div>
+			그룹원 리스트
+		</div>
+	</div>
+	<div data-role="header">
+		<a href="home.html" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+		<h1>그룹방</h1>
+		<a data-iconpos="notext" href="#panel" data-role="button" data-icon="bars"></a>
+	</div>
+
+	<div role="content">
+		<form ng-submit="addMessage()">
+			<input type="textarea" placeholder="게시물을 작성해보세요." class="textarea" ng-model="message">
+			<input type="submit" value="글쓰기">
+		</form>
+		<ul data-role="listview" data-filter="true" data-filter-placeholder="게시물 내용, 작성자, 작성일 등 검색" class="chatbox">
+			<li ng-repeat="message in messages | filter : gid">
+				<div><img src="" class="profile"><h3>{{ userlist.$getRecord(message.from).name }}</h3></div>
+				<div>{{ message.content }}</div>
+				<div data-role="controlgroup">
+					<button>좋아요</button>
+					<button>댓글</button>
+				</div>
+			</li>
+
+
+		</ul>
+	</div>
+
+</div>
+
+
+<div data-role="page" id="recommend">
+	<div data-role="header">
+		<a href="#main" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+		<h1>모임 추진</h1>
+	</div>
+	<div data-role="content">
+		<input ng-model="meeting.name" type="text" placeholder="모임명" required>
+		<div data-role="fieldcontain">
+			<label for="goal" class="select">모임 목적 설정</label>
+			<select ng-model="meeting.option" name="goal" id="goal" multiple="multiple" data-native-menu="false">
+				<option value="식사">식사</option>
+				<option value="술">술</option>
+				<option value="놀이">놀이</option>
+				<option value="회의">회의</option>
+			</select>
+		</div>
+		<div class="ui-grid-a">
+			<div  class="ui-block-a"><input ng-model="meeting.peoplemin" type="number" id="min" min="2" placeholder="최소인원(명), 필수아님"></div>
+			<div  class="ui-block-b"><input ng-model="meeting.peoplemax" type="number" id="max" min="2" placeholder="최대인원(명), 필수아님"></div>
+		</div>
+
+		<br>
+		<hr>
+		<b>모임 시간 추천 사용 여부</b>
+		<div class="ui-grid-a">
+			<div class="ui-block-a"><input ng-model="meeting.timerec" type="radio" value=true name="time-rec" id="on"><label for="on">사용</label></div>
+			<div class="ui-block-b"><input ng-model="meeting.timerec" type="radio" value=false name="time-rec" id="off"><label for="off">비사용</label></div>
+		</div>
+
+		<div id="time-rec-off">
+			<label for="date">날짜</label><input ng-model="false.date" type="date" id="date">
+			<div class="ui-grid-a">
+				<div class="ui-block-a"><label for="start">시작 시간   ~</label><input ng-model="false.start" type="time" id="start"></div>
+				<div class="ui-block-b"><label for="end">끝</label><input ng-model="false.end" type="time" id="end"></div>
+			</div>
+		</div>
+
+		<div id="time-rec-on">
+			<b>시간 조사 범위를 설정하세요</b>
+			<div class="ui-grid-a">
+				<div class="ui-block-a"><label for="start-date">시작 날짜   ~</label><input ng-model="true.start" type="date" id="start-date"></div>
+				<div class="ui-block-b"><label for="end-date">끝</label><input ng-model="true.end" type="date" id="end-date"></div>
+			</div>
+		</div>
+
+		<hr>
+		<br>
+
+		<label for="limit">참가 신청 마감일</label>
+		<input ng-model="meeting.limit" type="date" id="limit">
+		<br>
+		<form ng-submit="addMeeting()">
+			<button type="submit">모임 추진하기</button>
+		</form>
+
+	</div>
+</div>
+
+<div data-role="page" id="calendar" data-position="fixed" data-id="head">
+	<div data-role="header" class="head-center">
+		<a href="#main" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+		<div data-role="controlgroup" data-type="horizontal">
+			<a href="#calendar" data-role="button" class="ui-state-persist ui-btn-active">달력</a>
+			<a href="#schedule" data-role="button">일정</a>
+			<a href="#history" data-role="button">히스토리</a>
+		</div>
+	</div>
+	<div role="main" class="ui-content">
+		<div id="kCalendar"></div>
+
+	</div>
+</div>
+
+
+<div data-role="page" id="schedule" data-position="fixed" data-id="head">
+	<div data-role="header" class="head-center">
+		<a href="#main" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+		<div data-role="controlgroup" data-type="horizontal">
+			<a href="#calendar" data-role="button">달력</a>
+			<a href="#schedule" data-role="button" class="ui-state-persist ui-btn-active">일정</a>
+			<a href="#history" data-role="button">히스토리</a>
+		</div>
+	</div>
+	<div role="content">
+		<ul data-role="listview">
+			<li ng-repeat="meet in meetings| filter: {step : 2} ">
+				<a ng-click="meeting(meet.$id)" >{{meet.name}},  {{meet.date}}, {{meet.member.length}}명 </a>
+			</li>
+		</ul>
+	</div>
+</div>
+<div data-role="page" id="meeting" data-position="fixed" data-id="head">
+	<div data-role="header" class="head-center">
+		<a href="group.html" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+		<h1>모임</h1>
+	</div>
+	<div role="content">
+		<ul data-role="listview">
+			<li data-role="list-divider">
+				내가 추진한 모임
+			</li>
+
+			<li ng-repeat="meet in meetings | filter : {leader : uid }">
+				<div class="ui-grid-a">
+					<div class="ui-block-a">{{meet.name}}</div>
+					<div class="ui-block-b"><button ng-click="meeting(meet.$id)">신청 마감</button></div>
+				</div>
+			</li>
+			<li data-role="list-divider">
+				추진중인 모임
+			</li>
+			<li ng-repeat="meet in meetings | filter: {step : 1}">
+				<div class="ui-grid-a">
+					<div class="ui-block-a">{{meet.name}}</div>
+					<div class="ui-block-b"><button>모임 참가</button></div>
+				</div>
+
+			</li>
+			<li data-role="list-divider">
+				참가 신청한 모임
+			</li>
+			<li ng-repeat="meet in meetings| filter: uid |filter: {step : 1} ">
+				<a ng-click="meeting(meet.$id)" >{{meet.name}}, 현재 {{meet.member.length}}명 </a>
+			</li>
+		</ul>
+	</div>
+</div>
+
+<div data-role="page" id="history" data-position="fixed" data-id="head">
+	<div data-role="header" class="head-center">
+		<a href="#main" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+		<div data-role="controlgroup" data-type="horizontal">
+			<a href="#calendar" data-role="button">달력</a>
+			<a href="#schedule" data-role="button">일정</a>
+			<a href="#history" data-role="button" class="ui-state-persist ui-btn-active">히스토리</a>
+		</div>
+	</div>
+	<div role="main" class="ui-content">
+		<ul data-role="listview" data-filter="true" data-filter-placeholder="모임 일시, 장소, 내용, 참여자 검색">
+			<li>
+				<div>
+					<h3>haha hoho</h3>
+					<p><a href="#">kim</a>asgafbandfboadnblakdbnlanbl\nasdfnasfgn</p>
+					<p><a href="#">park</a>234</p>
+					<div class="ui-grid-a grid-text-input">
+						<div class="ui-block-a"><input type="text" placeholder="text"/></div>
+						<div class="ui-block-b"><button type="submit">submit</button></div>
+					</div>
+				</div>
+			</li>
+		</ul>
+	</div>
+</div>
+
+
+<script>
+
+   $('#on').click(function(){
+      $('#time-rec-on').show();
+      $('#time-rec-off').hide();
+   });
+
+   $('#off').click(function(){
+      $('#time-rec-off').show();
+      $('#time-rec-on').hide();
+   });
+
+      // define our app and dependencies (remember to include firebase!)
+   var app = angular.module("group", ["firebase"]);
+
+   // this factory returns a synchronized array of chat messages
+   app.factory("chatMessages", ["$firebaseArray",
+     function($firebaseArray) {
+      // create a reference to the database location where we will store our data
+      var ref = firebase.database().ref('post');
+
+      // this uses AngularFire to create the synchronized array
+      return $firebaseArray(ref);
+     }
+   ]);
+
+   // this factory returns a synchronized array of chat messages
+   app.factory("userList", ["$firebaseArray",
+     function($firebaseArray) {
+      // create a reference to the database location where we will store our data
+      var ref = firebase.database().ref('users');
+
+      // this uses AngularFire to create the synchronized array
+      return $firebaseArray(ref);
+     }
+   ]);
+   app.factory("meetings", ["$firebaseArray",
+     function($firebaseArray) {
+      // create a reference to the database location where we will store our data
+      var ref = firebase.database().ref('groups/'+gid+'/meeting');
+
+
+      // this uses AngularFire to create the synchronized array
+      return $firebaseArray(ref);
+     }
+   ]);
+
+   app.controller("postCtrl", ["$scope", "chatMessages","userList","meetings",
+     // we pass our new chatMessages factory into the controller
+     function($scope, chatMessages,userList,meetings) {
+      $scope.uid = uid;
+      $scope.gid=gid;
+      $scope.userlist=userList;
+      $scope.meetings=meetings;
+
+      // we add chatMessages array to the scope to be used in our ng-repeat
+      $scope.messages = chatMessages;
+      //meeting.html로 이동
+      $scope.meeting = function(id){
+          window.location="meeting.html?uid=" + uid + "&email=" + email+"&gid="+gid+"&mid="+id;
+         }
+
+      // post 추가
+      $scope.addMessage = function() {
+        // calling $add on a synchronized array is like Array.push(),
+        // except that it saves the changes to our database!
+        $scope.messages.$add({
+         from: $scope.uid,
+         content: $scope.message,
+         groupId : gid
+        });
+
+        // reset the message input
+        $scope.message = "";
+      };
+     // offline 모임 추가
+      $scope.addMeeting = function() {
+        // calling $add on a synchronized array is like Array.push(),
+        // except that it saves the changes to our database!
+
+
+        var limit = $scope.meeting.limit;
+        var year = limit.getFullYear();
+        var month = limit.getMonth();
+        var dat = limit.getDate();
+        var mylimit= year+'-'+month+'-'+dat;
+
+
+        if ($scope.meeting.timerec === "true") {
+
+          $scope.meetings.$add({
+            goal : $scope.meeting.option,
+           limit : mylimit,
+           max : $scope.meeting.peoplemax,
+           min : $scope.meeting.peoplemax,
+           name : $scope.meeting.name,
+           step : 1,
+           timerec : $scope.meeting.timerec,
+           leader : $scope.uid,
+           member : { 0 : $scope.uid}
+           });
+        }
+        else{
+
+        $scope.meetings.$add({
+           date : myfalse,
+            goal : $scope.meeting.option,
+           limit : mylimit,
+           max : $scope.meeting.peoplemax,
+           min : $scope.meeting.peoplemax,
+           name : $scope.meeting.name,
+           step : 1,
+           timerec : $scope.meeting.timerec,
+           leader : $scope.uid,
+           member : { 0 : $scope.uid}
+        });
+        }
+
+
+
+      };
+
+     }
+   ]);
+</script>
+
+
+
+</body>
+</html>

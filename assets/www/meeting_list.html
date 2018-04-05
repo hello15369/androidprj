@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>우리 어디가?</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+
+    <link rel="stylesheet" href="css/calendar.css">
+    <script src="js/calendar.js"></script>
+
+    <script>
+		var firebaseApp = firebase.initializeApp({
+			apiKey: "AIzaSyCNFFa-0zQ8BBsTkNM4076wMlaaEfNiMEI",
+			authDomain: "mobiletest-b5fc1.firebaseapp.com",
+			databaseURL: "https://mobiletest-b5fc1.firebaseio.com",
+			storageBucket: "mobiletest-b5fc1.appspot.com",
+			messagingSenderId: "891861159351"
+		})
+		var para = document.location.href.split("?");
+		var para_split = para[1].split("&");
+		var uid = para_split[0].split("=")[1];
+		var email = para_split[1].split("=")[1];
+
+	</script>
+
+</head>
+<body>
+
+<div data-role="page" id="meetinglist" data-position="fixed" data-id="head">
+    <div data-role="header" class="head-center">
+        <a href="group.html" data-rel="back" data-icon="carat-l" data-iconpos="notext"></a>
+        <h1>모임</h1>
+    </div>
+    <div role="content">
+        <ul data-role="listview">
+            <li data-role="list-divider">
+                내가 추진한 모임
+            </li>
+            <li>
+                그룹명
+            </li>
+            <li data-role="list-divider">
+                추진중인 모임
+            </li>
+            <li>
+                그룹명
+            </li>
+            <li data-role="list-divider">
+                참가 신청한 모임
+            </li>
+            <li>
+                그룹명
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+</script>
+
+</body>
+</html>
